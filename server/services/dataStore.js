@@ -1,9 +1,7 @@
 const { MongoClient } = require('mongodb');
-require('dotenv').config();
 
-const dns = require('dns');
-// Use Google DNS to resolve MongoDB SRV records (fixes ISP DNS issues)
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Only load dotenv locally (Vercel injects env vars automatically)
+try { require('dotenv').config(); } catch (e) { }
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = 'badminton-tracker';
@@ -15,7 +13,15 @@ async function getDb() {
     if (db) return db;
 
     if (!MONGODB_URI) {
-        throw new Error('MONGODB_URI environment variable is not set. Check your .env file.');
+        throw new Error('MONGODB_URI environment variable is not set.');
+    }
+
+    // Use Google DNS only in local development (fixes ISP DNS issues)
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+        try {
+            const dns = require('dns');
+            dns.setServers(['8.8.8.8', '8.8.4.4']);
+        } catch (e) { }
     }
 
     client = new MongoClient(MONGODB_URI, {

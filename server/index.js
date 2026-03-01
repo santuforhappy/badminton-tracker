@@ -7,6 +7,7 @@ const playerRoutes = require('./routes/players');
 const creditRoutes = require('./routes/credits');
 const sessionRoutes = require('./routes/sessions');
 const reportRoutes = require('./routes/reports');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/sessions', sessionRoutes);

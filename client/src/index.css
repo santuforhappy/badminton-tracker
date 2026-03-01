@@ -53,7 +53,9 @@
 }
 
 /* ===== RESET & BASE ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -107,7 +109,9 @@ button {
   outline: none;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   outline: none;
 }
@@ -301,10 +305,21 @@ input, select, textarea {
   height: 3px;
 }
 
-.stat-card.yellow::before { background: linear-gradient(90deg, var(--accent-yellow), transparent); }
-.stat-card.green::before { background: linear-gradient(90deg, var(--accent-green), transparent); }
-.stat-card.blue::before { background: linear-gradient(90deg, var(--accent-blue), transparent); }
-.stat-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), transparent); }
+.stat-card.yellow::before {
+  background: linear-gradient(90deg, var(--accent-yellow), transparent);
+}
+
+.stat-card.green::before {
+  background: linear-gradient(90deg, var(--accent-green), transparent);
+}
+
+.stat-card.blue::before {
+  background: linear-gradient(90deg, var(--accent-blue), transparent);
+}
+
+.stat-card.purple::before {
+  background: linear-gradient(90deg, var(--accent-purple), transparent);
+}
 
 .stat-card-icon {
   width: 44px;
@@ -316,10 +331,25 @@ input, select, textarea {
   margin-bottom: 16px;
 }
 
-.stat-card.yellow .stat-card-icon { background: var(--accent-yellow-soft); color: var(--accent-yellow); }
-.stat-card.green .stat-card-icon { background: var(--accent-green-soft); color: var(--accent-green); }
-.stat-card.blue .stat-card-icon { background: var(--accent-blue-soft); color: var(--accent-blue); }
-.stat-card.purple .stat-card-icon { background: var(--accent-purple-soft); color: var(--accent-purple); }
+.stat-card.yellow .stat-card-icon {
+  background: var(--accent-yellow-soft);
+  color: var(--accent-yellow);
+}
+
+.stat-card.green .stat-card-icon {
+  background: var(--accent-green-soft);
+  color: var(--accent-green);
+}
+
+.stat-card.blue .stat-card-icon {
+  background: var(--accent-blue-soft);
+  color: var(--accent-blue);
+}
+
+.stat-card.purple .stat-card-icon {
+  background: var(--accent-purple-soft);
+  color: var(--accent-purple);
+}
 
 .stat-card-value {
   font-size: 28px;
@@ -672,9 +702,17 @@ input, select, textarea {
   letter-spacing: -0.5px;
 }
 
-.player-balance.positive { color: var(--accent-green); }
-.player-balance.negative { color: var(--accent-red); }
-.player-balance.zero { color: var(--text-muted); }
+.player-balance.positive {
+  color: var(--accent-green);
+}
+
+.player-balance.negative {
+  color: var(--accent-red);
+}
+
+.player-balance.zero {
+  color: var(--text-muted);
+}
 
 .player-card-actions {
   display: flex;
@@ -933,35 +971,78 @@ input, select, textarea {
 
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(100px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-in {
   animation: fadeInUp 0.4s ease forwards;
 }
 
-.animate-in:nth-child(1) { animation-delay: 0s; }
-.animate-in:nth-child(2) { animation-delay: 0.05s; }
-.animate-in:nth-child(3) { animation-delay: 0.1s; }
-.animate-in:nth-child(4) { animation-delay: 0.15s; }
-.animate-in:nth-child(5) { animation-delay: 0.2s; }
-.animate-in:nth-child(6) { animation-delay: 0.25s; }
+.animate-in:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.animate-in:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.animate-in:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.animate-in:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.animate-in:nth-child(5) {
+  animation-delay: 0.2s;
+}
+
+.animate-in:nth-child(6) {
+  animation-delay: 0.25s;
+}
 
 /* ===== MOBILE MENU TOGGLE ===== */
 .mobile-menu-btn {
@@ -1142,7 +1223,9 @@ input, select, textarea {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-container {
@@ -1151,5 +1234,87 @@ input, select, textarea {
   justify-content: center;
   gap: 12px;
   padding: 40px;
+  color: var(--text-muted);
+}
+
+/* ===== LOGIN PAGE ===== */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.login-page::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(245, 197, 66, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(45, 212, 168, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
+  animation: loginBgRotate 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes loginBgRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg), 0 0 60px rgba(245, 197, 66, 0.05);
+  position: relative;
+  z-index: 1;
+  animation: slideUp var(--transition-slow) ease;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--accent-yellow), #e6a817);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #0a0e1a;
+  box-shadow: 0 0 30px rgba(245, 197, 66, 0.3);
+}
+
+.login-header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent-yellow), var(--accent-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.login-header p {
+  font-size: 14px;
   color: var(--text-muted);
 }

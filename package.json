@@ -1,11 +1,17 @@
 {
     "name": "badminton-tracker",
     "version": "1.0.0",
-    "description": "Badminton Expense Tracker - Track daily expenses, manage credits, and record play sessions",
     "private": true,
+    "dependencies": {
+        "express": "^5.1.0",
+        "cors": "^2.8.5",
+        "uuid": "^11.1.0",
+        "mongodb": "^6.17.0",
+        "dotenv": "^17.3.1"
+    },
     "scripts": {
         "dev:server": "cd server && node index.js",
         "dev:client": "cd client && npm run dev",
-        "install:all": "cd client && npm install && cd ../server && npm install"
+        "install:all": "npm install --prefix server && npm install --prefix client"
     }
 }

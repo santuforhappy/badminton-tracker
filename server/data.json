@@ -1,0 +1,77 @@
+{
+  "players": [
+    {
+      "id": "d938b63c-da48-483c-8a41-3a7fc8b476a4",
+      "name": "Rahul",
+      "contact": "9876543210",
+      "balance": 712.5,
+      "createdAt": "2026-03-01T11:34:20.068Z",
+      "active": true
+    },
+    {
+      "id": "dc5c754a-8108-44ad-9172-d18963c16c7a",
+      "name": "Priya",
+      "contact": "9876543211",
+      "balance": 212.5,
+      "createdAt": "2026-03-01T11:34:59.389Z",
+      "active": true
+    }
+  ],
+  "sessions": [
+    {
+      "id": "fd87b011-8c95-417a-89aa-9a33ceddd0bb",
+      "date": "2026-03-01",
+      "duration": 1,
+      "players": [
+        "d938b63c-da48-483c-8a41-3a7fc8b476a4",
+        "dc5c754a-8108-44ad-9172-d18963c16c7a"
+      ],
+      "expenses": {
+        "court": 400,
+        "shuttles": 175,
+        "other": 0
+      },
+      "totalExpense": 575,
+      "splitMethod": "equal",
+      "perPlayerCosts": {
+        "d938b63c-da48-483c-8a41-3a7fc8b476a4": 287.5,
+        "dc5c754a-8108-44ad-9172-d18963c16c7a": 287.5
+      },
+      "createdAt": "2026-03-01T12:09:12.358Z"
+    }
+  ],
+  "creditHistory": [
+    {
+      "id": "991ee695-96e1-4ca8-bb9d-6bde652806bb",
+      "playerId": "d938b63c-da48-483c-8a41-3a7fc8b476a4",
+      "amount": 1000,
+      "type": "credit",
+      "note": "Initial credit",
+      "date": "2026-03-01T11:34:20.068Z"
+    },
+    {
+      "id": "23981248-e3ab-41e7-8fa7-90916f40055e",
+      "playerId": "dc5c754a-8108-44ad-9172-d18963c16c7a",
+      "amount": 500,
+      "type": "credit",
+      "note": "Initial credit",
+      "date": "2026-03-01T11:34:59.389Z"
+    },
+    {
+      "id": "b4ed554c-0e1c-406e-af87-afbe80b47706",
+      "playerId": "d938b63c-da48-483c-8a41-3a7fc8b476a4",
+      "amount": 287.5,
+      "type": "debit",
+      "note": "Session on 2026-03-01",
+      "date": "2026-03-01T12:09:12.358Z"
+    },
+    {
+      "id": "3f5f423e-7169-4c55-a2e2-dcefdbc20e81",
+      "playerId": "dc5c754a-8108-44ad-9172-d18963c16c7a",
+      "amount": 287.5,
+      "type": "debit",
+      "note": "Session on 2026-03-01",
+      "date": "2026-03-01T12:09:12.358Z"
+    }
+  ]
+}

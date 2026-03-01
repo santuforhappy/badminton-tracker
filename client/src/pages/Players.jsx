@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserPlus, Edit3, Trash2, PlusCircle, History, X, Search, Users } from 'lucide-react';
 import { getPlayers, createPlayer, updatePlayer, deletePlayer, addCredit, getCreditHistory } from '../services/api';
 
-export default function Players({ addToast }) {
+export default function Players({ addToast, isAdmin = true }) {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -138,9 +138,11 @@ export default function Players({ addToast }) {
                         style={{ paddingLeft: 42 }}
                     />
                 </div>
-                <button className="btn btn-primary" onClick={() => { setForm({ name: '', contact: '', initialCredit: '' }); setShowAddModal(true); }}>
-                    <UserPlus size={18} /> Add Player
-                </button>
+                {isAdmin && (
+                    <button className="btn btn-primary" onClick={() => { setForm({ name: '', contact: '', initialCredit: '' }); setShowAddModal(true); }}>
+                        <UserPlus size={18} /> Add Player
+                    </button>
+                )}
             </div>
 
             {/* Players Grid */}
@@ -149,7 +151,7 @@ export default function Players({ addToast }) {
                     <div className="empty-state-icon"><Users size={36} /></div>
                     <h3>No players found</h3>
                     <p>{players.length === 0 ? 'Add your first player to get started!' : 'No players match your search.'}</p>
-                    {players.length === 0 && (
+                    {players.length === 0 && isAdmin && (
                         <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                             <UserPlus size={18} /> Add First Player
                         </button>
@@ -170,18 +172,24 @@ export default function Players({ addToast }) {
                                 {player.balance >= 0 ? '+' : '-'}{formatCurrency(player.balance)}
                             </div>
                             <div className="player-card-actions">
-                                <button className="btn btn-success btn-sm" onClick={() => openCreditModal(player)} title="Add Credit">
-                                    <PlusCircle size={15} /> Top Up
-                                </button>
+                                {isAdmin && (
+                                    <button className="btn btn-success btn-sm" onClick={() => openCreditModal(player)} title="Add Credit">
+                                        <PlusCircle size={15} /> Top Up
+                                    </button>
+                                )}
                                 <button className="btn btn-secondary btn-sm btn-icon" onClick={() => handleShowHistory(player)} title="Credit History">
                                     <History size={15} />
                                 </button>
-                                <button className="btn btn-secondary btn-sm btn-icon" onClick={() => openEditModal(player)} title="Edit">
-                                    <Edit3 size={15} />
-                                </button>
-                                <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeletePlayer(player)} title="Remove">
-                                    <Trash2 size={15} />
-                                </button>
+                                {isAdmin && (
+                                    <>
+                                        <button className="btn btn-secondary btn-sm btn-icon" onClick={() => openEditModal(player)} title="Edit">
+                                            <Edit3 size={15} />
+                                        </button>
+                                        <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeletePlayer(player)} title="Remove">
+                                            <Trash2 size={15} />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}

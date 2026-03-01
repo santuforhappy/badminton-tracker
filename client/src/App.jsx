@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Zap, Shield, Eye } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Players from './pages/Players';
 import Sessions from './pages/Sessions';
@@ -8,7 +8,7 @@ import Reports from './pages/Reports';
 import Login from './pages/Login';
 import Toast from './components/Toast';
 
-function Sidebar({ isOpen, onClose, onLogout }) {
+function Sidebar({ isOpen, onClose, onLogout, role }) {
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} style={{
@@ -41,7 +41,17 @@ function Sidebar({ isOpen, onClose, onLogout }) {
             Reports
           </NavLink>
         </nav>
-        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-default)' }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+            borderRadius: 'var(--radius-sm)',
+            background: role === 'admin' ? 'var(--accent-yellow-soft)' : 'var(--accent-blue-soft)',
+            fontSize: 12, fontWeight: 600,
+            color: role === 'admin' ? 'var(--accent-yellow)' : 'var(--accent-blue)'
+          }}>
+            {role === 'admin' ? <Shield size={14} /> : <Eye size={14} />}
+            {role === 'admin' ? 'Admin Access' : 'View Only'}
+          </div>
           <button className="btn btn-secondary btn-sm" onClick={onLogout}
             style={{ width: '100%', justifyContent: 'center', gap: 8 }}>
             <LogOut size={15} /> Logout
@@ -52,7 +62,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
   );
 }
 
-function AppContent({ onLogout }) {
+function AppContent({ onLogout, role }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -64,18 +74,20 @@ function AppContent({ onLogout }) {
     }, 3500);
   };
 
+  const isAdmin = role === 'admin';
+
   return (
     <div className="app-layout">
       <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={onLogout} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={onLogout} role={role} />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Dashboard addToast={addToast} />} />
-          <Route path="/players" element={<Players addToast={addToast} />} />
-          <Route path="/sessions" element={<Sessions addToast={addToast} />} />
-          <Route path="/reports" element={<Reports addToast={addToast} />} />
+          <Route path="/" element={<Dashboard addToast={addToast} isAdmin={isAdmin} />} />
+          <Route path="/players" element={<Players addToast={addToast} isAdmin={isAdmin} />} />
+          <Route path="/sessions" element={<Sessions addToast={addToast} isAdmin={isAdmin} />} />
+          <Route path="/reports" element={<Reports addToast={addToast} isAdmin={isAdmin} />} />
         </Routes>
       </main>
       <Toast toasts={toasts} />
@@ -85,23 +97,29 @@ function AppContent({ onLogout }) {
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('bb_auth'));
+  const [role, setRole] = useState(localStorage.getItem('bb_role'));
 
-  function handleLogin(token) {
+  function handleLogin(token, userRole) {
     setAuthToken(token);
+    setRole(userRole);
   }
 
   function handleLogout() {
     localStorage.removeItem('bb_auth');
+    localStorage.removeItem('bb_role');
     setAuthToken(null);
+    setRole(null);
   }
 
-  // Verify token on mount
   useEffect(() => {
     if (authToken) {
       fetch('/api/auth/verify', {
         headers: { Authorization: `Bearer ${authToken}` }
       }).then(res => {
         if (!res.ok) handleLogout();
+        else return res.json();
+      }).then(data => {
+        if (data?.role) setRole(data.role);
       }).catch(() => handleLogout());
     }
   }, []);
@@ -112,7 +130,7 @@ export default function App() {
 
   return (
     <Router>
-      <AppContent onLogout={handleLogout} />
+      <AppContent onLogout={handleLogout} role={role} />
     </Router>
   );
 }

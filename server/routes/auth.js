@@ -3,17 +3,16 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
-// The PIN is stored as an environment variable (set in .env or Vercel dashboard)
-// Default PIN is "1234" if not configured
-const APP_PIN = process.env.APP_PIN || '1234';
+// PINs from environment variables with defaults
+const ADMIN_PIN = process.env.ADMIN_PIN || 'bolt2024';
+const VIEWER_PIN = process.env.VIEWER_PIN || 'view123';
 
-// Simple token generation
 function generateToken() {
     return crypto.randomBytes(32).toString('hex');
 }
 
-// In-memory token store (resets on server restart — fine for this use case)
-const validTokens = new Set();
+// Store tokens with their roles
+const validTokens = new Map(); // token -> { role, createdAt }
 
 // POST /api/auth/login
 router.post('/login', (req, res) => {
@@ -23,10 +22,17 @@ router.post('/login', (req, res) => {
         return res.status(400).json({ error: 'PIN is required' });
     }
 
-    if (pin === APP_PIN) {
+    let role = null;
+    if (pin === ADMIN_PIN) {
+        role = 'admin';
+    } else if (pin === VIEWER_PIN) {
+        role = 'viewer';
+    }
+
+    if (role) {
         const token = generateToken();
-        validTokens.add(token);
-        res.json({ success: true, token });
+        validTokens.set(token, { role, createdAt: Date.now() });
+        res.json({ success: true, token, role });
     } else {
         res.status(401).json({ error: 'Invalid PIN. Please try again.' });
     }
@@ -40,8 +46,10 @@ router.get('/verify', (req, res) => {
     }
 
     const token = authHeader.split(' ')[1];
-    if (validTokens.has(token)) {
-        res.json({ valid: true });
+    const session = validTokens.get(token);
+
+    if (session) {
+        res.json({ valid: true, role: session.role });
     } else {
         res.status(401).json({ error: 'Invalid or expired token' });
     }

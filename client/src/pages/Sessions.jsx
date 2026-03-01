@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Users, Clock, DollarSign, Trash2, X, AlertCircle } from 'lucide-react';
 import { getPlayers, getSessions, createSession, deleteSession } from '../services/api';
 
-export default function Sessions({ addToast }) {
+export default function Sessions({ addToast, isAdmin = true }) {
     const [players, setPlayers] = useState([]);
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -127,9 +127,11 @@ export default function Sessions({ addToast }) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
-                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                    <Plus size={18} /> New Session
-                </button>
+                {isAdmin && (
+                    <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                        <Plus size={18} /> New Session
+                    </button>
+                )}
             </div>
 
             {/* Session List */}
@@ -138,9 +140,11 @@ export default function Sessions({ addToast }) {
                     <div className="empty-state-icon"><CalendarIcon size={36} /></div>
                     <h3>No sessions yet</h3>
                     <p>Create your first session to start tracking expenses!</p>
-                    <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                        <Plus size={18} /> Create First Session
-                    </button>
+                    {isAdmin && (
+                        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                            <Plus size={18} /> Create First Session
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="session-list">
@@ -167,9 +171,11 @@ export default function Sessions({ addToast }) {
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                                     <div className="session-amount">{formatCurrency(session.totalExpense)}</div>
-                                    <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeleteSession(session)} title="Delete session">
-                                        <Trash2 size={14} />
-                                    </button>
+                                    {isAdmin && (
+                                        <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeleteSession(session)} title="Delete session">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );

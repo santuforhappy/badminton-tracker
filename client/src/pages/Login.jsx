@@ -25,7 +25,8 @@ export default function Login({ onLogin }) {
             const data = await res.json();
             if (res.ok && data.success) {
                 localStorage.setItem('bb_auth', data.token);
-                onLogin(data.token);
+                localStorage.setItem('bb_role', data.role);
+                onLogin(data.token, data.role);
             } else {
                 setError(data.error || 'Invalid PIN');
             }

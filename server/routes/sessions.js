@@ -8,6 +8,7 @@ const {
     getSessionById,
     createSession: dbCreateSession,
     deleteSession: dbDeleteSession,
+    updateSession: dbUpdateSession,
     addCreditEntry,
 } = require('../services/dataStore');
 
@@ -55,7 +56,7 @@ router.get('/:id', async (req, res) => {
 // POST create session
 router.post('/', async (req, res) => {
     try {
-        const { date, duration, players: playerIds, expenses, splitMethod, playerHours } = req.body;
+        const { date, duration, players: playerIds, expenses, splitMethod, playerHours, startTime, endTime } = req.body;
 
         if (!date || !playerIds || playerIds.length === 0) {
             return res.status(400).json({ error: 'Date and at least one player are required' });
@@ -103,12 +104,15 @@ router.post('/', async (req, res) => {
         const session = {
             id: uuidv4(),
             date,
+            startTime: startTime || '',
+            endTime: endTime || '',
             duration: parseFloat(duration) || 0,
             players: playerIds,
             expenses: { court: courtCost, shuttles: shuttleCost, other: otherCost },
             totalExpense,
             splitMethod: splitMethod || 'equal',
             perPlayerCosts,
+            editHistory: [],
             createdAt: new Date().toISOString(),
         };
 
@@ -137,6 +141,56 @@ router.delete('/:id', async (req, res) => {
         res.json({ message: 'Session deleted' });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete session', details: err.message });
+    }
+});
+
+// PUT edit session (requires editComment)
+router.put('/:id', async (req, res) => {
+    try {
+        const session = await getSessionById(req.params.id);
+        if (!session) return res.status(404).json({ error: 'Session not found' });
+
+        const { date, duration, startTime, endTime, expenses, editComment } = req.body;
+
+        if (!editComment || editComment.trim() === '') {
+            return res.status(400).json({ error: 'Edit comment is mandatory when editing a session.' });
+        }
+
+        const updates = {};
+        if (date !== undefined) updates.date = date;
+        if (duration !== undefined) updates.duration = parseFloat(duration) || 0;
+        if (startTime !== undefined) updates.startTime = startTime;
+        if (endTime !== undefined) updates.endTime = endTime;
+        if (expenses !== undefined) {
+            updates.expenses = {
+                court: parseFloat(expenses.court) || 0,
+                shuttles: parseFloat(expenses.shuttles) || 0,
+                other: parseFloat(expenses.other) || 0,
+            };
+            updates.totalExpense = updates.expenses.court + updates.expenses.shuttles + updates.expenses.other;
+        }
+
+        // Add to edit history
+        const editEntry = {
+            comment: editComment.trim(),
+            editedAt: new Date().toISOString(),
+            changes: Object.keys(updates),
+        };
+        updates.editHistory = [...(session.editHistory || []), editEntry];
+        updates.lastEditedAt = new Date().toISOString();
+
+        const updated = await dbUpdateSession(req.params.id, updates);
+
+        // Enrich with player details
+        const allPlayers = await getPlayers();
+        updated.playerDetails = updated.players.map(pid => {
+            const p = allPlayers.find(pl => pl.id === pid);
+            return p ? { id: p.id, name: p.name } : { id: pid, name: 'Unknown' };
+        });
+
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update session', details: err.message });
     }
 });
 

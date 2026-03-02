@@ -126,6 +126,12 @@ async function deleteSession(id) {
     await database.collection('sessions').deleteOne({ id });
 }
 
+async function updateSession(id, updates) {
+    const database = await getDb();
+    await database.collection('sessions').updateOne({ id }, { $set: updates });
+    return database.collection('sessions').findOne({ id });
+}
+
 // Close connection (for graceful shutdown)
 async function closeConnection() {
     if (client) {
@@ -150,5 +156,6 @@ module.exports = {
     getSessionById,
     createSession,
     deleteSession,
+    updateSession,
     closeConnection,
 };

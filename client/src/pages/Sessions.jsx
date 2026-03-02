@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Clock, DollarSign, Trash2, X, AlertCircle } from 'lucide-react';
-import { getPlayers, getSessions, createSession, deleteSession } from '../services/api';
+import { Plus, Users, Clock, DollarSign, Trash2, X, AlertCircle, Edit3, MessageSquare } from 'lucide-react';
+import { getPlayers, getSessions, createSession, updateSession, deleteSession } from '../services/api';
 
 export default function Sessions({ addToast, isAdmin = true }) {
     const [players, setPlayers] = useState([]);
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingSession, setEditingSession] = useState(null);
+    const [editComment, setEditComment] = useState('');
+    const [editCommentError, setEditCommentError] = useState('');
 
     // Session form state
     const [sessionForm, setSessionForm] = useState({
         date: new Date().toISOString().split('T')[0],
+        startTime: '',
+        endTime: '',
         duration: '',
         players: [],
         expenses: { court: '', shuttles: '', other: '' },
         splitMethod: 'equal',
         playerHours: {},
+    });
+
+    // Edit form state
+    const [editForm, setEditForm] = useState({
+        date: '',
+        startTime: '',
+        endTime: '',
+        duration: '',
+        expenses: { court: '', shuttles: '', other: '' },
     });
 
     useEffect(() => { loadData(); }, []);
@@ -67,6 +82,24 @@ export default function Sessions({ addToast, isAdmin = true }) {
         return Object.fromEntries(sessionForm.players.map(pid => [pid, perPerson]));
     }
 
+    // Auto-calculate duration from start/end time
+    function calcDurationFromTime(startTime, endTime) {
+        if (!startTime || !endTime) return '';
+        const [sh, sm] = startTime.split(':').map(Number);
+        const [eh, em] = endTime.split(':').map(Number);
+        let diff = (eh * 60 + em) - (sh * 60 + sm);
+        if (diff < 0) diff += 24 * 60; // handle overnight
+        return (diff / 60).toFixed(1);
+    }
+
+    function handleTimeChange(field, value, formSetter, currentForm) {
+        const updated = { ...currentForm, [field]: value };
+        if (updated.startTime && updated.endTime) {
+            updated.duration = calcDurationFromTime(updated.startTime, updated.endTime);
+        }
+        formSetter(updated);
+    }
+
     async function handleCreateSession(e) {
         e.preventDefault();
         if (sessionForm.players.length === 0) {
@@ -86,10 +119,58 @@ export default function Sessions({ addToast, isAdmin = true }) {
             setShowCreateModal(false);
             setSessionForm({
                 date: new Date().toISOString().split('T')[0],
-                duration: '', players: [],
+                startTime: '', endTime: '', duration: '', players: [],
                 expenses: { court: '', shuttles: '', other: '' },
                 splitMethod: 'equal', playerHours: {},
             });
+            loadData();
+        } catch (err) {
+            addToast(err.message, 'error');
+        }
+    }
+
+    function openEditModal(session) {
+        setEditingSession(session);
+        setEditForm({
+            date: session.date,
+            startTime: session.startTime || '',
+            endTime: session.endTime || '',
+            duration: session.duration?.toString() || '',
+            expenses: {
+                court: session.expenses?.court?.toString() || '',
+                shuttles: session.expenses?.shuttles?.toString() || '',
+                other: session.expenses?.other?.toString() || '',
+            },
+        });
+        setEditComment('');
+        setEditCommentError('');
+        setShowEditModal(true);
+    }
+
+    async function handleEditSession(e) {
+        e.preventDefault();
+
+        if (!editComment.trim()) {
+            setEditCommentError('Edit comment is mandatory. Please explain what you changed.');
+            return;
+        }
+
+        try {
+            await updateSession(editingSession.id, {
+                date: editForm.date,
+                startTime: editForm.startTime,
+                endTime: editForm.endTime,
+                duration: editForm.duration,
+                expenses: {
+                    court: parseFloat(editForm.expenses.court) || 0,
+                    shuttles: parseFloat(editForm.expenses.shuttles) || 0,
+                    other: parseFloat(editForm.expenses.other) || 0,
+                },
+                editComment: editComment.trim(),
+            });
+            addToast('Session updated successfully', 'success');
+            setShowEditModal(false);
+            setEditingSession(null);
             loadData();
         } catch (err) {
             addToast(err.message, 'error');
@@ -111,6 +192,13 @@ export default function Sessions({ addToast, isAdmin = true }) {
     const formatDate = (dateStr) => {
         const d = new Date(dateStr);
         return { day: d.getDate(), month: d.toLocaleString('en', { month: 'short' }), year: d.getFullYear() };
+    };
+    const formatTime12 = (time24) => {
+        if (!time24) return '';
+        const [h, m] = time24.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const hr = h % 12 || 12;
+        return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`;
     };
 
     const perPlayerCosts = getPerPlayerCost();
@@ -150,6 +238,7 @@ export default function Sessions({ addToast, isAdmin = true }) {
                 <div className="session-list">
                     {sessions.map((session, i) => {
                         const { day, month, year } = formatDate(session.date);
+                        const hasTimings = session.startTime && session.endTime;
                         return (
                             <div key={session.id} className="card session-card animate-in" style={{ animationDelay: `${i * 0.05}s` }}>
                                 <div className="session-date-badge">
@@ -161,6 +250,9 @@ export default function Sessions({ addToast, isAdmin = true }) {
                                     <div className="session-meta">
                                         <span><Users size={13} /> {session.playerDetails?.length || session.players?.length} players</span>
                                         <span><Clock size={13} /> {session.duration} hours</span>
+                                        {hasTimings && (
+                                            <span>🕐 {formatTime12(session.startTime)} – {formatTime12(session.endTime)}</span>
+                                        )}
                                         <span style={{ textTransform: 'capitalize' }}>{session.splitMethod} split</span>
                                     </div>
                                     <div className="player-chips" style={{ marginTop: 8 }}>
@@ -168,13 +260,23 @@ export default function Sessions({ addToast, isAdmin = true }) {
                                             <span key={p.id} className="badge badge-blue" style={{ fontSize: 12 }}>{p.name}</span>
                                         ))}
                                     </div>
+                                    {session.editHistory && session.editHistory.length > 0 && (
+                                        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <MessageSquare size={11} /> Edited {session.editHistory.length} time{session.editHistory.length > 1 ? 's' : ''} — Last: "{session.editHistory[session.editHistory.length - 1]?.comment}"
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                                     <div className="session-amount">{formatCurrency(session.totalExpense)}</div>
                                     {isAdmin && (
-                                        <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeleteSession(session)} title="Delete session">
-                                            <Trash2 size={14} />
-                                        </button>
+                                        <div style={{ display: 'flex', gap: 6 }}>
+                                            <button className="btn btn-secondary btn-sm btn-icon" onClick={() => openEditModal(session)} title="Edit session">
+                                                <Edit3 size={14} />
+                                            </button>
+                                            <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDeleteSession(session)} title="Delete session">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -192,14 +294,26 @@ export default function Sessions({ addToast, isAdmin = true }) {
                             <button className="modal-close" onClick={() => setShowCreateModal(false)}><X size={18} /></button>
                         </div>
                         <form onSubmit={handleCreateSession}>
-                            <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Date *</label>
+                                <input className="form-input" type="date" value={sessionForm.date}
+                                    onChange={e => setSessionForm({ ...sessionForm, date: e.target.value })} required />
+                            </div>
+
+                            {/* Timings */}
+                            <div className="form-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Date *</label>
-                                    <input className="form-input" type="date" value={sessionForm.date}
-                                        onChange={e => setSessionForm({ ...sessionForm, date: e.target.value })} required />
+                                    <label className="form-label">Start Time</label>
+                                    <input className="form-input" type="time" value={sessionForm.startTime}
+                                        onChange={e => handleTimeChange('startTime', e.target.value, setSessionForm, sessionForm)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Duration (hours) *</label>
+                                    <label className="form-label">End Time</label>
+                                    <input className="form-input" type="time" value={sessionForm.endTime}
+                                        onChange={e => handleTimeChange('endTime', e.target.value, setSessionForm, sessionForm)} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Duration (hrs) *</label>
                                     <input className="form-input" type="number" placeholder="2" min="0.5" step="0.5"
                                         value={sessionForm.duration}
                                         onChange={e => setSessionForm({ ...sessionForm, duration: e.target.value })} required />
@@ -313,6 +427,126 @@ export default function Sessions({ addToast, isAdmin = true }) {
                             <div className="form-actions">
                                 <button type="submit" className="btn btn-primary">Create Session</button>
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Session Modal */}
+            {showEditModal && editingSession && (
+                <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+                    <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Edit Session</h3>
+                            <button className="modal-close" onClick={() => setShowEditModal(false)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleEditSession}>
+                            <div className="form-group">
+                                <label className="form-label">Date</label>
+                                <input className="form-input" type="date" value={editForm.date}
+                                    onChange={e => setEditForm({ ...editForm, date: e.target.value })} />
+                            </div>
+
+                            <div className="form-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Start Time</label>
+                                    <input className="form-input" type="time" value={editForm.startTime}
+                                        onChange={e => handleTimeChange('startTime', e.target.value, setEditForm, editForm)} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">End Time</label>
+                                    <input className="form-input" type="time" value={editForm.endTime}
+                                        onChange={e => handleTimeChange('endTime', e.target.value, setEditForm, editForm)} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Duration (hrs)</label>
+                                    <input className="form-input" type="number" placeholder="2" min="0.5" step="0.5"
+                                        value={editForm.duration}
+                                        onChange={e => setEditForm({ ...editForm, duration: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Expenses (₹)</label>
+                                <div className="form-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                                    <div>
+                                        <input className="form-input" type="number" placeholder="Court" min="0" step="0.01"
+                                            value={editForm.expenses.court}
+                                            onChange={e => setEditForm({ ...editForm, expenses: { ...editForm.expenses, court: e.target.value } })} />
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, paddingLeft: 4 }}>Court</div>
+                                    </div>
+                                    <div>
+                                        <input className="form-input" type="number" placeholder="Shuttles" min="0" step="0.01"
+                                            value={editForm.expenses.shuttles}
+                                            onChange={e => setEditForm({ ...editForm, expenses: { ...editForm.expenses, shuttles: e.target.value } })} />
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, paddingLeft: 4 }}>Shuttles</div>
+                                    </div>
+                                    <div>
+                                        <input className="form-input" type="number" placeholder="Other" min="0" step="0.01"
+                                            value={editForm.expenses.other}
+                                            onChange={e => setEditForm({ ...editForm, expenses: { ...editForm.expenses, other: e.target.value } })} />
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, paddingLeft: 4 }}>Other</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Players (read-only display) */}
+                            <div className="form-group">
+                                <label className="form-label">Players</label>
+                                <div className="player-chips">
+                                    {(editingSession.playerDetails || []).map(p => (
+                                        <span key={p.id} className="badge badge-blue" style={{ fontSize: 12 }}>{p.name}</span>
+                                    ))}
+                                </div>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+                                    Players cannot be changed after session creation.
+                                </div>
+                            </div>
+
+                            {/* Mandatory Edit Comment */}
+                            <div className="form-group">
+                                <label className="form-label" style={{ color: editCommentError ? 'var(--accent-red)' : undefined }}>
+                                    Edit Comment * (mandatory)
+                                </label>
+                                <textarea
+                                    className="form-input"
+                                    placeholder="Explain what you changed and why..."
+                                    rows={3}
+                                    value={editComment}
+                                    onChange={e => { setEditComment(e.target.value); setEditCommentError(''); }}
+                                    style={{
+                                        resize: 'vertical',
+                                        borderColor: editCommentError ? 'var(--accent-red)' : undefined,
+                                    }}
+                                />
+                                {editCommentError && (
+                                    <div style={{ color: 'var(--accent-red)', fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <AlertCircle size={13} /> {editCommentError}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Edit History */}
+                            {editingSession.editHistory && editingSession.editHistory.length > 0 && (
+                                <div style={{ padding: 16, background: 'var(--bg-glass)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', marginBottom: 20 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                                        Edit History
+                                    </div>
+                                    {editingSession.editHistory.map((entry, idx) => (
+                                        <div key={idx} style={{ fontSize: 13, padding: '6px 0', borderBottom: idx < editingSession.editHistory.length - 1 ? '1px solid var(--border-default)' : 'none' }}>
+                                            <span style={{ color: 'var(--text-primary)' }}>"{entry.comment}"</span>
+                                            <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 8 }}>
+                                                {new Date(entry.editedAt).toLocaleString()}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="form-actions">
+                                <button type="submit" className="btn btn-primary">Save Changes</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
                             </div>
                         </form>
                     </div>

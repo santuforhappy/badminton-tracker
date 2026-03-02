@@ -28,6 +28,7 @@ export const addCredit = (playerId, data) => request(`/credits/${playerId}`, { m
 export const getSessions = () => request('/sessions');
 export const getSession = (id) => request(`/sessions/${id}`);
 export const createSession = (data) => request('/sessions', { method: 'POST', body: JSON.stringify(data) });
+export const updateSession = (id, data) => request(`/sessions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteSession = (id) => request(`/sessions/${id}`, { method: 'DELETE' });
 
 // Reports

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Eye, EyeOff, Zap } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onLogin }) {
     const [pin, setPin] = useState('');
@@ -42,7 +42,7 @@ export default function Login({ onLogin }) {
             <div className="login-card">
                 <div className="login-header">
                     <div className="login-logo">
-                        <Zap size={32} />
+                        <img src="/logo.png" alt="Bolt Badminton Club" style={{ width: 48, height: 48, objectFit: 'contain' }} />
                     </div>
                     <h1>Bolt Badminton Club</h1>
                     <p>Enter your access PIN to continue</p>

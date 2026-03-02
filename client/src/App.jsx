@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Zap, Shield, Eye } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Shield, Eye } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Players from './pages/Players';
 import Sessions from './pages/Sessions';
@@ -17,7 +17,7 @@ function Sidebar({ isOpen, onClose, onLogout, role }) {
       }} />}
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon"><Zap size={24} /></div>
+          <div className="sidebar-brand-icon"><img src="/logo.png" alt="Bolt" style={{ width: 32, height: 32, objectFit: 'contain' }} /></div>
           <div>
             <h1>Bolt Badminton</h1>
             <span>Club Manager</span>

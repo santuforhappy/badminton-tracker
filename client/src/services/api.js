@@ -23,6 +23,8 @@ export const deletePlayer = (id) => request(`/players/${id}`, { method: 'DELETE'
 export const getCreditHistory = (playerId) => request(`/credits/${playerId}`);
 export const getAllCreditHistory = () => request('/credits');
 export const addCredit = (playerId, data) => request(`/credits/${playerId}`, { method: 'POST', body: JSON.stringify(data) });
+export const editCreditEntry = (entryId, data) => request(`/credits/entry/${entryId}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteCreditEntry = (entryId) => request(`/credits/entry/${entryId}`, { method: 'DELETE' });
 
 // Sessions
 export const getSessions = () => request('/sessions');

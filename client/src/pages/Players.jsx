@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit3, Trash2, PlusCircle, History, X, Search, Users } from 'lucide-react';
-import { getPlayers, createPlayer, updatePlayer, deletePlayer, addCredit, getCreditHistory } from '../services/api';
+import { UserPlus, Edit3, Trash2, PlusCircle, History, X, Search, Users, AlertCircle } from 'lucide-react';
+import { getPlayers, createPlayer, updatePlayer, deletePlayer, addCredit, getCreditHistory, editCreditEntry, deleteCreditEntry } from '../services/api';
 
 export default function Players({ addToast, isAdmin = true }) {
     const [players, setPlayers] = useState([]);
@@ -16,6 +16,8 @@ export default function Players({ addToast, isAdmin = true }) {
     // Form states
     const [form, setForm] = useState({ name: '', contact: '', initialCredit: '' });
     const [creditForm, setCreditForm] = useState({ amount: '', note: '' });
+    const [editingEntry, setEditingEntry] = useState(null);
+    const [editEntryForm, setEditEntryForm] = useState({ amount: '', note: '' });
 
     useEffect(() => { loadPlayers(); }, []);
 
@@ -293,11 +295,11 @@ export default function Players({ addToast, isAdmin = true }) {
 
             {/* Credit History Modal */}
             {showHistoryModal && (
-                <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+                <div className="modal-overlay" onClick={() => { setShowHistoryModal(false); setEditingEntry(null); }}>
                     <div className="modal credit-history-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>Credit History — {selectedPlayer?.name}</h3>
-                            <button className="modal-close" onClick={() => setShowHistoryModal(false)}><X size={18} /></button>
+                            <button className="modal-close" onClick={() => { setShowHistoryModal(false); setEditingEntry(null); }}><X size={18} /></button>
                         </div>
                         {creditHistory.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
@@ -306,14 +308,82 @@ export default function Players({ addToast, isAdmin = true }) {
                         ) : (
                             <div>
                                 {creditHistory.map(entry => (
-                                    <div key={entry.id} className="credit-entry">
-                                        <div className="credit-info">
-                                            <div className="credit-note">{entry.note}</div>
-                                            <div className="credit-date">{new Date(entry.date).toLocaleString()}</div>
-                                        </div>
-                                        <div className={`credit-amount ${entry.type}`}>
-                                            {entry.type === 'credit' ? '+' : '-'}₹{entry.amount.toFixed(2)}
-                                        </div>
+                                    <div key={entry.id} className="credit-entry" style={{ flexDirection: 'column', gap: 8 }}>
+                                        {editingEntry?.id === entry.id ? (
+                                            /* Inline Edit Form */
+                                            <div style={{ width: '100%' }}>
+                                                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                                                    <input className="form-input" type="number" placeholder="Amount" min="0.01" step="0.01"
+                                                        value={editEntryForm.amount}
+                                                        onChange={e => setEditEntryForm({ ...editEntryForm, amount: e.target.value })}
+                                                        style={{ flex: 1 }} />
+                                                    <input className="form-input" type="text" placeholder="Note"
+                                                        value={editEntryForm.note}
+                                                        onChange={e => setEditEntryForm({ ...editEntryForm, note: e.target.value })}
+                                                        style={{ flex: 2 }} />
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <button className="btn btn-primary btn-sm" onClick={async () => {
+                                                        if (!editEntryForm.amount || parseFloat(editEntryForm.amount) <= 0) {
+                                                            addToast('Enter a valid amount', 'error');
+                                                            return;
+                                                        }
+                                                        try {
+                                                            await editCreditEntry(entry.id, {
+                                                                amount: parseFloat(editEntryForm.amount),
+                                                                note: editEntryForm.note,
+                                                            });
+                                                            addToast('Transaction updated & balance adjusted', 'success');
+                                                            setEditingEntry(null);
+                                                            handleShowHistory(selectedPlayer);
+                                                            loadPlayers();
+                                                        } catch (err) {
+                                                            addToast(err.message, 'error');
+                                                        }
+                                                    }}>Save</button>
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => setEditingEntry(null)}>Cancel</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* Normal Display */
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                <div className="credit-info">
+                                                    <div className="credit-note">{entry.note}</div>
+                                                    <div className="credit-date">
+                                                        {new Date(entry.date).toLocaleString()}
+                                                        {entry.lastEditedAt && <span style={{ color: 'var(--accent-yellow)', marginLeft: 6 }}>(edited)</span>}
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <div className={`credit-amount ${entry.type}`}>
+                                                        {entry.type === 'credit' ? '+' : '-'}₹{entry.amount.toFixed(2)}
+                                                    </div>
+                                                    {isAdmin && entry.type === 'credit' && (
+                                                        <>
+                                                            <button className="btn btn-secondary btn-sm btn-icon" title="Edit" onClick={() => {
+                                                                setEditingEntry(entry);
+                                                                setEditEntryForm({ amount: entry.amount.toString(), note: entry.note });
+                                                            }}>
+                                                                <Edit3 size={13} />
+                                                            </button>
+                                                            <button className="btn btn-danger btn-sm btn-icon" title="Delete & reverse balance" onClick={async () => {
+                                                                if (!confirm(`Delete this ₹${entry.amount.toFixed(2)} ${entry.type}? The player balance will be adjusted.`)) return;
+                                                                try {
+                                                                    await deleteCreditEntry(entry.id);
+                                                                    addToast('Transaction deleted & balance reversed', 'success');
+                                                                    handleShowHistory(selectedPlayer);
+                                                                    loadPlayers();
+                                                                } catch (err) {
+                                                                    addToast(err.message, 'error');
+                                                                }
+                                                            }}>
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

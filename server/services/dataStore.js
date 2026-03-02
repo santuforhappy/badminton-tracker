@@ -93,6 +93,22 @@ async function addCreditEntry(entry) {
     return entry;
 }
 
+async function getCreditEntryById(id) {
+    const database = await getDb();
+    return database.collection('creditHistory').findOne({ id });
+}
+
+async function updateCreditEntry(id, updates) {
+    const database = await getDb();
+    await database.collection('creditHistory').updateOne({ id }, { $set: updates });
+    return database.collection('creditHistory').findOne({ id });
+}
+
+async function deleteCreditEntry(id) {
+    const database = await getDb();
+    await database.collection('creditHistory').deleteOne({ id });
+}
+
 async function updatePlayerBalance(id, amount) {
     const database = await getDb();
     await database.collection('players').updateOne(
@@ -151,6 +167,9 @@ module.exports = {
     getCreditHistoryByPlayer,
     getAllCreditHistory,
     addCreditEntry,
+    getCreditEntryById,
+    updateCreditEntry,
+    deleteCreditEntry,
     updatePlayerBalance,
     getSessions,
     getSessionById,

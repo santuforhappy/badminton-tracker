@@ -6,6 +6,9 @@ const {
     getCreditHistoryByPlayer,
     getAllCreditHistory,
     addCreditEntry,
+    getCreditEntryById,
+    updateCreditEntry: dbUpdateCreditEntry,
+    deleteCreditEntry: dbDeleteCreditEntry,
 } = require('../services/dataStore');
 
 const router = express.Router();
@@ -57,6 +60,62 @@ router.post('/:playerId', async (req, res) => {
         res.status(201).json({ player: updatedPlayer, entry });
     } catch (err) {
         res.status(500).json({ error: 'Failed to add credit', details: err.message });
+    }
+});
+
+// PUT edit a credit entry (adjusts player balance accordingly)
+router.put('/entry/:entryId', async (req, res) => {
+    try {
+        const entry = await getCreditEntryById(req.params.entryId);
+        if (!entry) return res.status(404).json({ error: 'Credit entry not found' });
+
+        const { amount, note } = req.body;
+        if (!amount || amount <= 0) return res.status(400).json({ error: 'Valid amount is required' });
+
+        const newAmount = parseFloat(amount);
+        const oldAmount = entry.amount;
+
+        // Reverse old balance effect and apply new one
+        if (entry.type === 'credit') {
+            // Old: +oldAmount, New: +newAmount => difference = newAmount - oldAmount
+            await updatePlayerBalance(entry.playerId, newAmount - oldAmount);
+        } else {
+            // Old: -oldAmount, New: -newAmount => difference = oldAmount - newAmount
+            await updatePlayerBalance(entry.playerId, oldAmount - newAmount);
+        }
+
+        const updated = await dbUpdateCreditEntry(req.params.entryId, {
+            amount: newAmount,
+            note: note || entry.note,
+            lastEditedAt: new Date().toISOString(),
+        });
+
+        const updatedPlayer = await getPlayerById(entry.playerId);
+        res.json({ entry: updated, player: updatedPlayer });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update credit entry', details: err.message });
+    }
+});
+
+// DELETE a credit entry (reverses the balance effect)
+router.delete('/entry/:entryId', async (req, res) => {
+    try {
+        const entry = await getCreditEntryById(req.params.entryId);
+        if (!entry) return res.status(404).json({ error: 'Credit entry not found' });
+
+        // Reverse the balance effect
+        if (entry.type === 'credit') {
+            await updatePlayerBalance(entry.playerId, -entry.amount); // undo credit
+        } else {
+            await updatePlayerBalance(entry.playerId, entry.amount); // undo debit
+        }
+
+        await dbDeleteCreditEntry(req.params.entryId);
+
+        const updatedPlayer = await getPlayerById(entry.playerId);
+        res.json({ message: 'Credit entry deleted and balance adjusted', player: updatedPlayer });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete credit entry', details: err.message });
     }
 });
 

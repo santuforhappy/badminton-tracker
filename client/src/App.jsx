@@ -17,7 +17,7 @@ function Sidebar({ isOpen, onClose, onLogout, role }) {
       }} />}
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon"><img src="/logo.png" alt="Bolt" style={{ width: 32, height: 32, objectFit: 'contain' }} /></div>
+          <div className="sidebar-brand-icon"><img src="/icon.png" alt="Bolt" style={{ width: 32, height: 32, objectFit: 'contain' }} /></div>
           <div>
             <h1>Bolt Badminton</h1>
             <span>Club Manager</span>

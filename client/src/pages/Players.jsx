@@ -18,6 +18,7 @@ export default function Players({ addToast, isAdmin = true }) {
     const [creditForm, setCreditForm] = useState({ amount: '', note: '' });
     const [editingEntry, setEditingEntry] = useState(null);
     const [editEntryForm, setEditEntryForm] = useState({ amount: '', note: '' });
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => { loadPlayers(); }, []);
 
@@ -34,6 +35,8 @@ export default function Players({ addToast, isAdmin = true }) {
 
     async function handleAddPlayer(e) {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await createPlayer(form);
             addToast(`${form.name} added successfully!`, 'success');
@@ -42,11 +45,15 @@ export default function Players({ addToast, isAdmin = true }) {
             loadPlayers();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
     async function handleEditPlayer(e) {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await updatePlayer(selectedPlayer.id, { name: form.name, contact: form.contact });
             addToast('Player updated successfully!', 'success');
@@ -54,6 +61,8 @@ export default function Players({ addToast, isAdmin = true }) {
             loadPlayers();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -70,6 +79,8 @@ export default function Players({ addToast, isAdmin = true }) {
 
     async function handleAddCredit(e) {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await addCredit(selectedPlayer.id, creditForm);
             addToast(`₹${creditForm.amount} added to ${selectedPlayer.name}`, 'success');
@@ -78,6 +89,8 @@ export default function Players({ addToast, isAdmin = true }) {
             loadPlayers();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -223,8 +236,8 @@ export default function Players({ addToast, isAdmin = true }) {
                                     onChange={e => setForm({ ...form, initialCredit: e.target.value })} />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Add Player</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Adding...' : 'Add Player'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -251,8 +264,8 @@ export default function Players({ addToast, isAdmin = true }) {
                                     onChange={e => setForm({ ...form, contact: e.target.value })} />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Save Changes</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -285,8 +298,8 @@ export default function Players({ addToast, isAdmin = true }) {
                                     onChange={e => setCreditForm({ ...creditForm, note: e.target.value })} />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-success">Add Credit</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreditModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-success" disabled={submitting}>{submitting ? 'Adding...' : 'Add Credit'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreditModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>

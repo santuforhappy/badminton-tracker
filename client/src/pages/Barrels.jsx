@@ -14,6 +14,7 @@ export default function Barrels({ addToast, isAdmin = true }) {
     const [shuttleSummary, setShuttleSummary] = useState({ totalShuttleAmount: 0, sessionCount: 0, sessions: [] });
     const [filterFrom, setFilterFrom] = useState('');
     const [filterTo, setFilterTo] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     // Barrel form
     const [form, setForm] = useState({
@@ -57,6 +58,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
 
     async function handleAddBarrel(e) {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await createBarrel(form);
             addToast('Barrel added successfully!', 'success');
@@ -65,6 +68,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
             loadData();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -83,6 +88,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
 
     async function handleEditBarrel(e) {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await updateBarrel(editingBarrel.id, form);
             addToast('Barrel updated!', 'success');
@@ -92,6 +99,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
             loadData();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -342,8 +351,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
                                     style={{ resize: 'vertical' }} />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Add Barrel</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Adding...' : 'Add Barrel'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -399,8 +408,8 @@ export default function Barrels({ addToast, isAdmin = true }) {
                                     style={{ resize: 'vertical' }} />
                             </div>
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Save Changes</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>

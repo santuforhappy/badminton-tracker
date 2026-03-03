@@ -11,6 +11,7 @@ export default function Sessions({ addToast, isAdmin = true }) {
     const [editingSession, setEditingSession] = useState(null);
     const [editComment, setEditComment] = useState('');
     const [editCommentError, setEditCommentError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     // Session form state
     const [sessionForm, setSessionForm] = useState({
@@ -106,6 +107,8 @@ export default function Sessions({ addToast, isAdmin = true }) {
             addToast('Select at least one player', 'error');
             return;
         }
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await createSession({
                 ...sessionForm,
@@ -126,6 +129,8 @@ export default function Sessions({ addToast, isAdmin = true }) {
             loadData();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -155,6 +160,8 @@ export default function Sessions({ addToast, isAdmin = true }) {
             return;
         }
 
+        if (submitting) return;
+        setSubmitting(true);
         try {
             await updateSession(editingSession.id, {
                 date: editForm.date,
@@ -174,6 +181,8 @@ export default function Sessions({ addToast, isAdmin = true }) {
             loadData();
         } catch (err) {
             addToast(err.message, 'error');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -425,8 +434,10 @@ export default function Sessions({ addToast, isAdmin = true }) {
                             )}
 
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Create Session</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                    {submitting ? 'Creating...' : 'Create Session'}
+                                </button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -545,8 +556,10 @@ export default function Sessions({ addToast, isAdmin = true }) {
                             )}
 
                             <div className="form-actions">
-                                <button type="submit" className="btn btn-primary">Save Changes</button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                    {submitting ? 'Saving...' : 'Save Changes'}
+                                </button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={submitting}>Cancel</button>
                             </div>
                         </form>
                     </div>

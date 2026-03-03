@@ -36,5 +36,19 @@ export const deleteSession = (id) => request(`/sessions/${id}`, { method: 'DELET
 // Reports
 export const getReport = (period) => request(`/reports?period=${period || ''}`);
 
+// Barrels
+export const getBarrels = () => request('/barrels');
+export const createBarrel = (data) => request('/barrels', { method: 'POST', body: JSON.stringify(data) });
+export const updateBarrel = (id, data) => request(`/barrels/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteBarrel = (id) => request(`/barrels/${id}`, { method: 'DELETE' });
+export const getShuttleSummary = (from, to) => {
+    let url = '/barrels/shuttle-summary';
+    const params = [];
+    if (from) params.push(`from=${from}`);
+    if (to) params.push(`to=${to}`);
+    if (params.length) url += `?${params.join('&')}`;
+    return request(url);
+};
+
 // Sheets
 export const syncToSheets = (spreadsheetId) => request('/sheets/sync', { method: 'POST', body: JSON.stringify({ spreadsheetId }) });

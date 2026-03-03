@@ -6,6 +6,7 @@ const creditRoutes = require('../server/routes/credits');
 const sessionRoutes = require('../server/routes/sessions');
 const reportRoutes = require('../server/routes/reports');
 const authRoutes = require('../server/routes/auth');
+const barrelRoutes = require('../server/routes/barrels');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/barrels', barrelRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

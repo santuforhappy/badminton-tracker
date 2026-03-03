@@ -157,6 +157,37 @@ async function closeConnection() {
     }
 }
 
+// Barrel operations
+async function getBarrels() {
+    const database = await getDb();
+    return database.collection('barrels')
+        .find({})
+        .sort({ purchaseDate: -1 })
+        .toArray();
+}
+
+async function getBarrelById(id) {
+    const database = await getDb();
+    return database.collection('barrels').findOne({ id });
+}
+
+async function createBarrel(barrel) {
+    const database = await getDb();
+    await database.collection('barrels').insertOne(barrel);
+    return barrel;
+}
+
+async function updateBarrel(id, updates) {
+    const database = await getDb();
+    await database.collection('barrels').updateOne({ id }, { $set: updates });
+    return database.collection('barrels').findOne({ id });
+}
+
+async function deleteBarrel(id) {
+    const database = await getDb();
+    await database.collection('barrels').deleteOne({ id });
+}
+
 module.exports = {
     getDb,
     getPlayers,
@@ -176,5 +207,10 @@ module.exports = {
     createSession,
     deleteSession,
     updateSession,
+    getBarrels,
+    getBarrelById,
+    createBarrel,
+    updateBarrel,
+    deleteBarrel,
     closeConnection,
 };

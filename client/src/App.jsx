@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Shield, Eye } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, BarChart3, Menu, X, LogOut, Shield, Eye, Package } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Players from './pages/Players';
 import Sessions from './pages/Sessions';
 import Reports from './pages/Reports';
+import Barrels from './pages/Barrels';
 import Login from './pages/Login';
 import Toast from './components/Toast';
 
@@ -39,6 +40,10 @@ function Sidebar({ isOpen, onClose, onLogout, role }) {
           <NavLink to="/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
             <BarChart3 size={20} />
             Reports
+          </NavLink>
+          <NavLink to="/barrels" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={onClose}>
+            <Package size={20} />
+            Barrels
           </NavLink>
         </nav>
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -88,6 +93,7 @@ function AppContent({ onLogout, role }) {
           <Route path="/players" element={<Players addToast={addToast} isAdmin={isAdmin} />} />
           <Route path="/sessions" element={<Sessions addToast={addToast} isAdmin={isAdmin} />} />
           <Route path="/reports" element={<Reports addToast={addToast} isAdmin={isAdmin} />} />
+          <Route path="/barrels" element={<Barrels addToast={addToast} isAdmin={isAdmin} />} />
         </Routes>
       </main>
       <Toast toasts={toasts} />

@@ -8,6 +8,7 @@ const creditRoutes = require('./routes/credits');
 const sessionRoutes = require('./routes/sessions');
 const reportRoutes = require('./routes/reports');
 const authRoutes = require('./routes/auth');
+const barrelRoutes = require('./routes/barrels');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,6 +22,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/barrels', barrelRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
